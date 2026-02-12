@@ -68,3 +68,22 @@ public:
 		cout << "Member Menu: Search | Borrow | Return\n";
 	}
 };
+
+//Librarian class below:
+class Librarian : public User {
+public:
+	Librarian(int i, string n) : User(i,n) {}
+
+	void showMenu() override {
+		cout << "Librarian Menu: Add | Remove | View Reports\n";
+	}
+};
+
+//LIbrary system class below:
+class LibrarySystem {
+private:
+	vector<Book> books;
+public:
+	
+
+};
