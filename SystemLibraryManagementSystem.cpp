@@ -40,3 +40,31 @@ public:
 
 	virtual ~User() {}
 };
+
+//Member Class below:
+class Member : public User {
+private: 
+	vector<int> borrowedBooks;
+
+public:
+	Member( int i, string n) : User(i, n) {}
+
+	bool canBorrow() {
+		return borrowedBooks.size() < MAX_BORROW;
+
+	}
+	void borrowBook(int bookId) {
+		borrowedBooks.push_back(bookId);
+	}
+	void returnBook(int bookId) {
+		for (int i = 0; i < borrowedBooks.size(); i++) {
+			if (borrowedBooks[i] == bookId) {
+				borrowedBooks.erase(borrowedBooks.begin() +i);
+				break;
+			}
+		}
+	}
+	void showMenu() override {
+		cout << "Member Menu: Search | Borrow | Return\n";
+	}
+};
