@@ -117,6 +117,13 @@ public:
 		}
 		cout << "Borrow failed.\n";
 	}
-
-
+	void returnBook(Member& member, int bookId) {
+		for (auto& book : books) {
+			if (book.getID() == bookId) {
+				book.setStatus("Available");
+				member.returnBook(bookId);
+				cout << "book returned succesfully.\n";
+			}
+		}
+	}
 };
