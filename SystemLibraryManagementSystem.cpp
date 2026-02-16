@@ -84,6 +84,39 @@ class LibrarySystem {
 private:
 	vector<Book> books;
 public:
-	
+	void addBook(int id, string title, string author) {
+		books.push_back(Book(id, title, author));
+	}
+
+	void searchBook(string title) {
+		for (auto& book : books) {
+			if (book.getTitle() == title) {
+				cout << "Found: " << book.getTitle()
+					 << " | Status: " << book.getStatus() << endl;
+				return;
+			}
+		}
+		cout << "Book not found\n";
+	}
+
+	void borrowBook(Member& member, int bookId) {
+		for (auto& book : books) {
+			if (book.getID() == bookId &&
+				book.getStatus() == "Available") {
+
+				if (!member.canBorrow()) {
+					cout << "Borrow limit reached\n";
+					return;
+				}
+
+				book.setStatus("Borrowed");
+				member.borrowBook(bookId);
+				cout << "Book borrowed successfully.\n";
+				return;
+			}
+		}
+		cout << "Borrow failed.\n";
+	}
+
 
 };
