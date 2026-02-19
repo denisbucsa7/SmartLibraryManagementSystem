@@ -5,6 +5,8 @@
 using namespace std;
 
 const int MAX_BORROW = 5;
+const int LOAN_DAYS = 14;
+const int RESERVATION_DAYS = 3;
 
 //Book Class below:
 class Book {
@@ -12,7 +14,7 @@ private:
 	int id;
 	string title;
 	string author;
-	string status; // Available or Borrowed
+	string status; // Available or Borrowed or Reserved
 
 public:
 	Book(int i, string t, string a)
@@ -45,6 +47,8 @@ public:
 class Member : public User {
 private: 
 	vector<int> borrowedBooks;
+	vector<int> borrowedDays; //Track days borrowed
+	vector<int> reservedBooks;
 
 public:
 	Member( int i, string n) : User(i, n) {}
@@ -64,6 +68,23 @@ public:
 			}
 		}
 	}
+	void reserveBook(int bookId) {
+		reservedBooks.push_back(bookId);
+	}
+	void incrementDays() {
+		for (int i = 0; i < borrowedDays.size(); i++) {
+			borrowedDays[i]++;
+		}
+	}
+	void checkOverdue() {
+		for (int i = 0; i < borrowedDays.size(); i++) {
+			if (borrowedDays[i] > LOAN_DAYS) {
+				cout << "Book ID" << borrowedBooks[i]
+					 << "is overdue\n";
+			}
+		}
+	}
+
 	void showMenu() override {
 		cout << "Member Menu: Search | Borrow | Return\n";
 	}
@@ -76,6 +97,34 @@ public:
 
 	void showMenu() override {
 		cout << "Librarian Menu: Add | Remove | View Reports\n";
+	}
+};
+
+//Administrator class below:
+class Administrator : public User {
+private: 
+	int borrowLimit;
+	double latePenalty;
+
+public:
+	Administrator(int i, string n)
+		: User(i,n), borrowLimit(MAX_BORROW), latePenalty(2.0) { }
+
+	void setBorrowLimit(int limit) {
+		borrowLimit = limit;
+	}
+
+	void setLatePenalty(double penalty) {
+		latePenalty = penalty;
+	}
+
+	void showRules() {
+		cout << "Borrow Limit:" << borrowLimit << endl;
+		cout << "Late Penalty per day: £" << latePenalty << endl;
+	}
+
+	void showMenu() override {
+		cout << "Administrator Menu: Manage Users | Set Rules\n";
 	}
 };
 
@@ -122,7 +171,7 @@ public:
 			if (book.getID() == bookId) {
 				book.setStatus("Available");
 				member.returnBook(bookId);
-				cout << "book returned succesfully.\n";
+				cout << "Book returned succesfully.\n";
 			}
 		}
 	}
