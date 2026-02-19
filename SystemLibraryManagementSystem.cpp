@@ -127,3 +127,30 @@ public:
 		}
 	}
 };
+// Main program:
+int main() {
+	LibrarySystem library;
+
+	library.addBook(1, "A tour of C++", "Bjarne Stroustrup");
+	library.addBook(2, "Object-Oriented Thought Process", "Matt A. Weisfeld");
+
+	Member m1(101, "Denis B");
+	Librarian l1(201, "Catherine Williams");
+
+	//Polymorphism
+	User* user1 = &m1;
+	User* user2 = &l1;
+
+	user1->showMenu();
+	user2->showMenu();
+
+	//Borrowing
+	library.searchBook("A tour of C++");
+	library.borrowBook(m1,1);
+	library.searchBook("A tour of C++");
+
+	library.returnBook(m1,1);
+	library.searchBook("A tour of C++");
+
+	return 0;
+}
