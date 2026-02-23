@@ -14,7 +14,7 @@ private:
 	int id;
 	string title;
 	string author;
-	string status; // Available or Borrowed or ReserveD
+	string status; // Available or Borrowed or Reserved
 
 public:
 	Book(int i, string t, string a)
@@ -196,7 +196,7 @@ public:
 
 				books[i].setStatus("Reserved");
 				member.reserveBook(bookId);
-				cout << "Book reserved (expires in 3 days)\n";
+				cout << "Book reserved (expires in 3 days) \n";
 				return;
 			}
 		}
@@ -204,7 +204,7 @@ public:
 	}
 };
 
-// Main program:
+// Main program :
 int main() {
 	LibrarySystem library;
 
