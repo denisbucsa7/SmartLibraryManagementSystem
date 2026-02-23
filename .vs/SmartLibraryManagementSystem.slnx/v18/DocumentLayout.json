@@ -1,6 +1,14 @@
 {
   "Version": 1,
+<<<<<<< HEAD
   "WorkspaceRootPath": "C:\\Users\\dbucs\\OneDrive\\Documents\\SmartLibraryManagementSystem\\",
+=======
+<<<<<<< HEAD
+  "WorkspaceRootPath": "C:\\Users\\dbucs\\OneDrive\\Documents\\SmartLibraryManagementSystem\\",
+=======
+  "WorkspaceRootPath": "C:\\Users\\dbucs\\OneDrive\\Documents\\GitHub\\SmartLibraryManagementSystem\\",
+>>>>>>> 7aca6163fcf1fa8339e6f647851740a6c6cdb726
+>>>>>>> f28196f80a19d68ff848f515d6548ffb52db4e7b
   "Documents": [],
   "DocumentGroupContainers": [
     {
