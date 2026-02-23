@@ -8,24 +8,30 @@ const int MAX_BORROW = 5;
 const int LOAN_DAYS = 14;
 const int RESERVATION_DAYS = 3;
 
+enum BookStatus {
+	Available,
+	Borrowed,
+	Reserved
+};
+
 //Book Class below:
 class Book {
 private:
 	int id;
 	string title;
 	string author;
-	string status; // Available or Borrowed or Reserved
+	BookStatus status; // Available or Borrowed or Reserved
 
 public:
 	Book(int i, string t, string a)
-		: id(i), title(t), author(a), status("Available") {
+		: id(i), title(t), author(a), status(Available) {
 	}
 
 	int getID() const { return id; }
 	string getTitle() const { return title; }
-	string getStatus() const { return status; }
+	BookStatus getStatus() const { return status; }
 
-	void setStatus(string s) { status = s; }
+	void setStatus(BookStatus s) { status = s; }
 };
 
 //User Class below:
@@ -33,13 +39,26 @@ class User {
 protected:
 	int id;
 	string name;
+	string email;
+	string password;
 
 public:
-	User(int i, string n) : id(i), name(n) {}
-	virtual void showMenu() = 0; //Polymorphism
+	User(int i, string n, string e, string p)
+		: id(i), name(n), email(e), password(p) {
+	}
 
 	int getId() const { return id; }
 	string getName() const { return name; }
+
+	virtual void login() {
+		cout << name << " logged in\n";
+	}
+
+	virtual void logout() {
+		cout << name << " logged out\n";
+	}
+
+	virtual void showMenu() = 0; //Polymorphism
 
 	virtual ~User() {}
 };
@@ -52,7 +71,9 @@ private:
 	vector<int> reservedBooks;
 
 public:
-	Member(int i, string n) : User(i, n) {}
+	Member(int i, string n, string e, string p)
+		: User(i, n, e, p) {
+	}
 
 	bool canBorrow() {
 		return borrowedBooks.size() < MAX_BORROW;
@@ -96,12 +117,22 @@ public:
 //Librarian class below:
 class Librarian : public User {
 public:
-	Librarian(int i, string n) : User(i, n) {}
+	Librarian(int i, string n, string e, string p)
+		: User(i, n, e, p) {
+	}
 
 	void showMenu() override {
 		cout << "Librarian Menu: Add | Remove | View Reports\n";
 	}
+
+	void addBook() {
+		cout << "Book added\n";
+	}
+	void removeBook() {
+		cout << "Removed Book\n";
+	}
 };
+
 
 //Administrator class below:
 class Administrator : public User {
@@ -110,8 +141,10 @@ private:
 	double latePenalty;
 
 public:
-	Administrator(int i, string n)
-		: User(i, n), borrowLimit(MAX_BORROW), latePenalty(2.0) {
+	Administrator(int i, string n, string e, string p)
+		: User(i, n, e, p),
+		borrowLimit(MAX_BORROW),
+		latePenalty(2.0) {
 	}
 
 	void setBorrowLimit(int limit) {
@@ -164,14 +197,14 @@ public:
 	void borrowBook(Member& member, int bookId) {
 		for (int i = 0; i < books.size(); i++) {
 			if (books[i].getID() == bookId &&
-				books[i].getStatus() == "Available") {
+				books[i].getStatus() == Available) {
 
 				if (!member.canBorrow()) {
 					cout << "Borrow limit reached\n";
 					return;
 				}
 
-				books[i].setStatus("Borrowed");
+				books[i].setStatus(Borrowed);
 				member.borrowBook(bookId);
 				cout << "Book borrowed successfully.\n";
 				return;
@@ -182,7 +215,7 @@ public:
 	void returnBook(Member& member, int bookId) {
 		for (auto& book : books) {
 			if (book.getID() == bookId) {
-				book.setStatus("Available");
+				book.setStatus(Available);
 				member.returnBook(bookId);
 				cout << "Book returned succesfully.\n";
 			}
@@ -192,9 +225,9 @@ public:
 	void reserveBook(Member& member, int bookId) {
 		for (int i = 0; i < books.size(); i++) {
 			if (books[i].getID() == bookId &&
-				books[i].getStatus() == "Borrowed") {
+				books[i].getStatus() == Borrowed) {
 
-				books[i].setStatus("Reserved");
+				books[i].setStatus(Reserved);
 				member.reserveBook(bookId);
 				cout << "Book reserved (expires in 3 days) \n";
 				return;
@@ -211,9 +244,9 @@ int main() {
 	library.addBook(1, "A tour of C++", "Bjarne Stroustrup");
 	library.addBook(2, "Object-Oriented Thought Process", "Matt A. Weisfeld");
 
-	Member m1(101, "Denis B");
-	Librarian l1(201, "Catherine Williams");
-	Administrator admin(301, "Admin");
+	Member m1(101, "Denis B", "denisbucsa7@gmail.com", "4321");
+	Librarian l1(201, "Catherine Williams", "catherinew@gmail.com", "7654");
+	Administrator admin(301, "Admin", "administrator@icloud.com", "9999");
 
 	//Polymorphism
 	User* users[3] = { &m1, &l1, &admin };
