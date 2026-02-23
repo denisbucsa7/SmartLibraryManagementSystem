@@ -18,13 +18,14 @@ private:
 
 public:
 	Book(int i, string t, string a)
-		: id(i), title(t), author(a), status("Available") { }
+		: id(i), title(t), author(a), status("Available") {
+	}
 
-	int getID() const { return id;}
-	string getTitle() const { return title;}
-	string getStatus() const {return status;}
+	int getID() const { return id; }
+	string getTitle() const { return title; }
+	string getStatus() const { return status; }
 
-	void setStatus(string s) {status = s;}
+	void setStatus(string s) { status = s; }
 };
 
 //User Class below:
@@ -37,21 +38,21 @@ public:
 	User(int i, string n) : id(i), name(n) {}
 	virtual void showMenu() = 0; //Polymorphism
 
-	int getId() const {return id;}
-	string getName() const { return name;}
+	int getId() const { return id; }
+	string getName() const { return name; }
 
 	virtual ~User() {}
 };
 
 //Member Class below:
 class Member : public User {
-private: 
+private:
 	vector<int> borrowedBooks;
 	vector<int> borrowedDays; //Track days borrowed
 	vector<int> reservedBooks;
 
 public:
-	Member( int i, string n) : User(i, n) {}
+	Member(int i, string n) : User(i, n) {}
 
 	bool canBorrow() {
 		return borrowedBooks.size() < MAX_BORROW;
@@ -59,11 +60,13 @@ public:
 	}
 	void borrowBook(int bookId) {
 		borrowedBooks.push_back(bookId);
+		borrowedDays.push_back(0);
 	}
 	void returnBook(int bookId) {
 		for (int i = 0; i < borrowedBooks.size(); i++) {
 			if (borrowedBooks[i] == bookId) {
-				borrowedBooks.erase(borrowedBooks.begin() +i);
+				borrowedBooks.erase(borrowedBooks.begin() + i);
+				borrowedDays.erase(borrowedDays.begin() + i);
 				break;
 			}
 		}
@@ -79,8 +82,8 @@ public:
 	void checkOverdue() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			if (borrowedDays[i] > LOAN_DAYS) {
-				cout << "Book ID" << borrowedBooks[i]
-					 << "is overdue\n";
+				cout << "Book ID " << borrowedBooks[i]
+					<< " is overdue\n";
 			}
 		}
 	}
@@ -93,7 +96,7 @@ public:
 //Librarian class below:
 class Librarian : public User {
 public:
-	Librarian(int i, string n) : User(i,n) {}
+	Librarian(int i, string n) : User(i, n) {}
 
 	void showMenu() override {
 		cout << "Librarian Menu: Add | Remove | View Reports\n";
@@ -102,13 +105,14 @@ public:
 
 //Administrator class below:
 class Administrator : public User {
-private: 
+private:
 	int borrowLimit;
 	double latePenalty;
 
 public:
 	Administrator(int i, string n)
-		: User(i,n), borrowLimit(MAX_BORROW), latePenalty(2.0) { }
+		: User(i, n), borrowLimit(MAX_BORROW), latePenalty(2.0) {
+	}
 
 	void setBorrowLimit(int limit) {
 		borrowLimit = limit;
@@ -137,11 +141,20 @@ public:
 		books.push_back(Book(id, title, author));
 	}
 
+	void removeBook(int id) {
+		for (int i = 0; i < books.size(); i++) {
+			if (books[i].getID() == id) {
+				books.erase(books.begin() + i);
+				cout << "Book removed\n";
+			}
+		}
+	}
+
 	void searchBook(string title) {
 		for (auto& book : books) {
 			if (book.getTitle() == title) {
 				cout << "Found: " << book.getTitle()
-					 << " | Status: " << book.getStatus() << endl;
+					<< " | Status: " << book.getStatus() << endl;
 				return;
 			}
 		}
@@ -149,16 +162,16 @@ public:
 	}
 
 	void borrowBook(Member& member, int bookId) {
-		for (auto& book : books) {
-			if (book.getID() == bookId &&
-				book.getStatus() == "Available") {
+		for (int i = 0; i < books.size(); i++) {
+			if (books[i].getID() == bookId &&
+				books[i].getStatus() == "Available") {
 
 				if (!member.canBorrow()) {
 					cout << "Borrow limit reached\n";
 					return;
 				}
 
-				book.setStatus("Borrowed");
+				books[i].setStatus("Borrowed");
 				member.borrowBook(bookId);
 				cout << "Book borrowed successfully.\n";
 				return;
@@ -175,7 +188,22 @@ public:
 			}
 		}
 	}
+
+	void reserveBook(Member& member, int bookId) {
+		for (int i = 0; i < books.size(); i++) {
+			if (books[i].getID() == bookId &&
+				books[i].getStatus() == "Borrowed") {
+
+				books[i].setStatus("Reserved");
+				member.reserveBook(bookId);
+				cout << "Book reserved (expires in 3 days)\n";
+				return;
+			}
+		}
+		cout << "Reservation failed\n";
+	}
 };
+
 // Main program:
 int main() {
 	LibrarySystem library;
@@ -185,20 +213,27 @@ int main() {
 
 	Member m1(101, "Denis B");
 	Librarian l1(201, "Catherine Williams");
+	Administrator admin(301, "Admin");
 
 	//Polymorphism
-	User* user1 = &m1;
-	User* user2 = &l1;
+	User* users[3] = { &m1, &l1, &admin };
+	for (int i = 0; i < 3; i++) {
+		users[i]->showMenu();
+	}
 
-	user1->showMenu();
-	user2->showMenu();
-
-	//Borrowing
+	//Borrowing book
 	library.searchBook("A tour of C++");
-	library.borrowBook(m1,1);
+	library.borrowBook(m1, 1);
 	library.searchBook("A tour of C++");
 
-	library.returnBook(m1,1);
+	//Days passing by (incrementing)
+	for (int i = 0; i < 15; i++)
+		m1.incrementDays();
+
+	m1.checkOverdue();
+
+	//Returning book
+	library.returnBook(m1, 1);
 	library.searchBook("A tour of C++");
 
 	return 0;
