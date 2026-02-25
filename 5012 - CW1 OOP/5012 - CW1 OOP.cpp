@@ -186,9 +186,18 @@ public:
 	void searchBook(string title) {
 		for (auto& book : books) {
 			if (book.getTitle() == title) {
-				cout << "Found: " << book.getTitle()
-					<< " | Status: " << book.getStatus() << endl;
-				return;
+
+			string statusText;
+
+			if (book.getStatus() == Available)
+				statusText = "Available";
+			else if (book.getStatus() == Borrowed)
+				statusText = "Borrowed";
+			else
+				statusText = "Reserved";
+			cout << "Found: " << book.getTitle()
+				 << " \ Status: " << statusText << endl;
+			return;
 			}
 		}
 		cout << "Book not found\n";
