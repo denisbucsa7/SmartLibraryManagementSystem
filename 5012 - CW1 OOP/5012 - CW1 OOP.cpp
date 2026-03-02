@@ -40,6 +40,16 @@ public:
 	}
 };
 
+class Notification {
+private:
+	string message;
+public:
+	Notification(string msg) : message(msg) {}
+	void send() {
+		cout << "Notification: " << message << endl;
+	}
+};
+
 //User Class below:
 class User {
 protected:
@@ -51,6 +61,10 @@ protected:
 public:
 	User(int i, string n, string e, string p)
 		: id(i), name(n), email(e), password(p) {
+	}
+
+	bool authenticate(string inputEmail, string inputPassword) {
+		return (email == inputEmail && password == inputPassword);
 	}
 
 	int getId() const { return id; }
@@ -72,6 +86,8 @@ public:
 //Member Class below:
 class Member : public User {
 private:
+	friend class LibrarySystem;
+	
 	vector<int> borrowedBooks; // Tracks books borrowed
 	vector<int> borrowedDays; //Track days borrowed
 	vector<int> reservedBooks; 
@@ -108,14 +124,6 @@ public:
 			reservationDays[i]++;
 		}
 	}
-	void checkReservationDaysExpiry() {
-		for (int i = 0; i < reservationDays.size(); i++) {
-			if (reservationDays[i] > RESERVATION_DAYS) {
-				cout << "Reservation expired for Book ID "
-					 << reservedBooks[i] << endl;
-			}
-		}
-	}
 	void incrementDays() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			borrowedDays[i]++;
@@ -129,9 +137,8 @@ public:
 					 << " is overdue tomorrow.\n";
 			}
 			if (borrowedDays[i] > LOAN_DAYS) {
-				cout << "Book ID "
-				     << borrowedBooks[i]
-					 << " is overdue.\n";
+				Notification n ("Book ID " + to_string(borrowedBooks[i]) + " is overdue.");
+				n.send();
 			}
 		}
 	}
@@ -161,6 +168,10 @@ public:
 
 	int getBorrowLimit() const {
 		return borrowLimit;
+	}
+
+	void setLatePenalty(double penalty) {
+		latePenalty = penalty;
 	}
 
 	void addBook(int id, string title, string author) {
@@ -231,6 +242,30 @@ public:
 		cout << "Reservation failed\n";
 	}
 
+	void checkReservationExpiry(Member& member) {
+		for (int i = 0; i < member.reservedBooks.size(); i++) {
+			if (member.reservationDays[i] >= RESERVATION_DAYS) {
+				int expiredBookId = member.reservedBooks[i];
+
+				// set book to available
+				for (auto& book : books) {
+					if (book.getID() == expiredBookId) {
+						book.setStatus(Available);
+						break;
+					}
+				}
+				Notification n ("Reservation expired for Book ID " + to_string(expiredBookId));
+				n.send();
+
+				// remove reservation
+				member.reservedBooks.erase(member.reservedBooks.begin() + i);
+				member.reservationDays.erase(member.reservationDays.begin() + i);
+
+				i --;
+			}
+		}
+	}
+
 	void generateOverdueReport(Member& member) {
 		member.checkOverdue();
 	}
@@ -247,12 +282,14 @@ public:
 		cout << "Librarian Menu: Add | Remove | View Reports\n";
 	}
 
-	void addBook() {
-		cout << "Book added\n";
+	void addBook(LibrarySystem& system, int id, string title, string author) {
+		system.addBook(id, title, author);
 	}
-	void removeBook() {
-		cout << "Removed Book\n";
+
+	void removeBook(LibrarySystem& system, int id) {
+		system.removeBook(id);
 	}
+
 	void viewOverdueReport(LibrarySystem& system, Member& member) {
 		system.generateOverdueReport(member);
 	}
@@ -272,12 +309,12 @@ public:
 		latePenalty(2.0) {
 	}
 
-	void setBorrowLimit(int limit) {
-		borrowLimit = limit;
+	void setBorrowLimit(LibrarySystem& system, int limit) {
+		system.setBorrowLimit(limit);
 	}
 
-	void setLatePenalty(double penalty) {
-		latePenalty = penalty;
+	void setLatePenalty(LibrarySystem& system, double penalty) {
+		system.setLatePenalty(penalty);
 	}
 
 	void showRules() {
@@ -312,6 +349,11 @@ int main() {
 	for (int i = 0; i < 4; i++)
 		users[i]->showMenu();
 
+	//authenticate denisb user logging in
+	if (m1.authenticate("denisb@gmail.com", "4321")) {
+	m1.login(); 
+	}
+
 	cout << "\n=== Test Borrowing Books ===\n";
 	library.borrowBook(m1, 1); // should succeed
 	library.borrowBook(m1, 2); // should succeed
@@ -336,7 +378,7 @@ int main() {
 	m1.incrementReservationDays(); // 1 day passing
 	m1.incrementReservationDays();
 	m1.incrementReservationDays(); // 3 days now passed
-	m1.checkReservationDaysExpiry(); // should expire reservation
+	library.checkReservationExpiry(m1); // should expire reservation
 
 	cout << "\n=== Test Overdue Books ===\n";
 	//incrememnt days to cause overdue
@@ -348,8 +390,8 @@ int main() {
 	l1.viewOverdueReport(library,m1); //librarian generates report
 
 	cout << "\n=== Test Admin Rules Change ===\n";
-	admin.setBorrowLimit(7);
-	admin.setLatePenalty(5.0);
+	admin.setBorrowLimit(library, 7);
+	admin.setLatePenalty(library, 5.0);
 	admin.showRules();
 
 	return 0;
