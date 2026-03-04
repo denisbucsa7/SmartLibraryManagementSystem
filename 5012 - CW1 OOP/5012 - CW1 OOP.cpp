@@ -3,6 +3,8 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 
 using namespace std;
 
@@ -95,6 +97,7 @@ private:
 	vector<int> borrowedDays; //Track days borrowed
 	vector<int> reservedBooks; 
 	vector<int> reservationDays;
+	vector<time_t> borrowedDates; 
 
 public:
 	Member(int i, string n, string e, string p)
@@ -108,12 +111,14 @@ public:
 	void borrowBook(int bookId) {
 		borrowedBooks.push_back(bookId);
 		borrowedDays.push_back(0);
+		borrowedDates.push_back(time(0));
 	}
 	void returnBook(int bookId) {
 		for (int i = 0; i < borrowedBooks.size(); i++) {
 			if (borrowedBooks[i] == bookId) {
 				borrowedBooks.erase(borrowedBooks.begin() + i);
 				borrowedDays.erase(borrowedDays.begin() + i);
+				borrowedDates.erase(borrowedDates.begin() + i);
 				break;
 			}
 		}
@@ -235,7 +240,14 @@ public:
 
 				books[i].setStatus(Borrowed);
 				member.borrowBook(bookId);
-				cout << "Book borrowed successfully.\n";
+
+				time_t borrowTime = member.borrowedDates.back();
+				time_t dueTime = borrowTime + LOAN_DAYS * 24*60*60;
+
+				char dueDateStr[26];
+				ctime_s(dueDateStr, sizeof(dueDateStr), & dueTime);
+
+				cout << "Book borrowed successfully. Due Date: " << dueDateStr;
 				return;
 			}
 		}
