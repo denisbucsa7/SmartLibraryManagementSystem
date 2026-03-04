@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -29,6 +31,7 @@ public:
 
 	int getID() const { return id; }
 	string getTitle() const { return title; }
+	string getAuthor() const {return author; }
 	BookStatus getStatus() const { return status; }
 
 	void setStatus(BookStatus s) { status = s; }
@@ -71,11 +74,11 @@ public:
 	string getName() const { return name; }
 
 	virtual void login() {
-		cout << name << " logged in\n";
+		cout << "\n" + name << " logged in\n";
 	}
 
 	virtual void logout() {
-		cout << name << " logged out\n";
+		cout << "\n" + name << " logged out\n";
 	}
 
 	virtual void showMenu() = 0; //Polymorphism
@@ -119,16 +122,17 @@ public:
 		reservedBooks.push_back(bookId);
 		reservationDays.push_back(0);
 	}
-	void incrementReservationDays() {
-		for (int i = 0; i < reservationDays.size(); i++) {
-			reservationDays[i]++;
-		}
-	}
 	void incrementDays() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			borrowedDays[i]++;
 		}
 	}
+	void incrementReservationDays() {
+		for (int i = 0; i < reservationDays.size(); i++) {
+			reservationDays[i]++;
+		}
+	}
+	
 	void checkOverdue() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			if (borrowedDays[i] > LOAN_DAYS - 1) {
@@ -152,6 +156,7 @@ public:
 class LibrarySystem {
 private:
 	vector<Book> books;
+	vector<User*> users;
 	int borrowLimit;
 	double latePenalty;
 
@@ -174,6 +179,24 @@ public:
 		latePenalty = penalty;
 	}
 
+	void addUser(User* user) {
+		users.push_back(user);
+	}
+
+	void remove_user(int userId) {
+		for (int i = 0; i < users.size(); i++) {
+			if (users[i]->getId() == userId) {
+				users.erase(users.begin() + i);
+			}
+		}
+	}
+
+	void listUsers() {
+		for (auto user : users) {
+			cout << user->getName() << endl;
+		}
+	}
+	
 	void addBook(int id, string title, string author) {
 		books.push_back(Book(id, title, author));
 	}
@@ -188,11 +211,12 @@ public:
 		}
 	}
 
-	void searchBook(string title) {
+	void searchBook(const string& query) {
 		for (auto& book : books) {
-			if (book.getTitle() == title) {
+			if (book.getTitle() == query || book.getAuthor() == query) {
 				cout << "Found: " << book.getTitle()
-					<< " | Status: " << book.getStatusString() << endl;
+					 << " by " << book.getAuthor()
+					 << " | Status: " << book.getStatusString() << endl;
 				return;
 			}
 		}
@@ -267,7 +291,21 @@ public:
 	}
 
 	void generateOverdueReport(Member& member) {
-		member.checkOverdue();
+		for (int i = 0; i < member.borrowedDays.size(); i++) {
+
+			if (member.borrowedDays[i] > LOAN_DAYS) {
+
+				int overdueDays = member.borrowedDays[i] - LOAN_DAYS;
+				double fine = overdueDays * latePenalty;
+
+				std::ostringstream oss;
+				oss << "Book ID: " << member.borrowedBooks[i]
+					<< " is overdue. Fine: GBP " << std:: fixed << std::setprecision(2) << fine;
+
+				Notification n(oss.str());
+				n.send();
+			}
+		}
 	}
 };
 
@@ -295,18 +333,12 @@ public:
 	}
 };
 
-
 //Administrator class below:
 class Administrator : public User {
-private:
-	int borrowLimit;
-	double latePenalty;
-
 public:
 	Administrator(int i, string n, string e, string p)
-		: User(i, n, e, p),
-		borrowLimit(MAX_BORROW),
-		latePenalty(2.0) {
+		: User(i, n, e, p) {
+
 	}
 
 	void setBorrowLimit(LibrarySystem& system, int limit) {
@@ -317,13 +349,24 @@ public:
 		system.setLatePenalty(penalty);
 	}
 
-	void showRules() {
-		cout << "Borrow Limit:" << borrowLimit << endl;
-		cout << "Late Penalty per day: £" << latePenalty << endl;
+	void showRules(LibrarySystem& system) {
+		cout << "Borrow Limit:" << system.getBorrowLimit() << endl;
 	}
 
 	void showMenu() override {
 		cout << "Administrator Menu: Manage Users | Set Rules\n";
+	}
+
+	void addUser(LibrarySystem& system, User* user) {
+		system.addUser(user);
+	}
+
+	void removeUser(LibrarySystem& system, int userId) {
+		system.remove_user(userId);
+	}
+
+	void viewUsers(LibrarySystem& system) {
+		system.listUsers();
 	}
 };
 
@@ -343,9 +386,18 @@ int main() {
 	Librarian l1(201, "Catherine Williams", "catherinew@gmail.com", "7654");
 	Administrator admin(301, "Admin", "administrator@icloud.com", "9999");
 
+	//add users to system
+	admin.addUser(library, &m1);
+	admin.addUser(library, &m2);
+	admin.addUser(library, &l1);
+	admin.addUser(library, &admin);
+
+	cout << "\n=== Admin Viewing Users ===\n";
+	admin.viewUsers(library);
+	
 	//Polymorphism, displaying the menus
 	User* users[4] = { &m1, &m2,  &l1, &admin };
-	cout << "=== Display User Menus ===\n";
+	cout << "\n=== Display User Menus ===\n";
 	for (int i = 0; i < 4; i++)
 		users[i]->showMenu();
 
@@ -384,15 +436,15 @@ int main() {
 	//incrememnt days to cause overdue
 	for (int i = 0; i < 15; i++)
 		m1.incrementDays();
-	m1.checkOverdue();
+	library.generateOverdueReport(m1);
 
 	cout << "\n=== Test Librarian Overdue Report ===\n";
 	l1.viewOverdueReport(library,m1); //librarian generates report
 
 	cout << "\n=== Test Admin Rules Change ===\n";
 	admin.setBorrowLimit(library, 7);
-	admin.setLatePenalty(library, 5.0);
-	admin.showRules();
+	admin.setLatePenalty(library, 4.0);
+	admin.showRules(library);
 
 	return 0;
 }
