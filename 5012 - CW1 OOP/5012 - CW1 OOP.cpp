@@ -386,77 +386,87 @@ public:
 int main() {
 	LibrarySystem library;
 
-	//Add books
-	library.addBook(1, "A tour of C++", "Bjarne Stroustrup");
-	library.addBook(2, "Object-Oriented Thought Process", "Matt A. Weisfeld");
+	// Add some books
+	library.addBook(1, "A Tour of C++", "Bjarne Stroustrup");
+	library.addBook(2, "Object-Oriented Thought Process", "Matt Weisfeld");
 	library.addBook(3, "Data Structures", "Mark Allen Weiss");
 
-	//Create users
+	// Create the users
 	Member m1(101, "Denis B", "denisb@gmail.com", "4321");
-	Member m2(102, "Ian V", "ianv@gmail.com", "1234");
+	Librarian l1(201, "Ian Visnevschi", "ianv@gmail.com", "1234");
+	Administrator admin(301, "Admin", "admin@gmail.com", "9999");
 
-	Librarian l1(201, "Catherine Williams", "catherinew@gmail.com", "7654");
-	Administrator admin(301, "Admin", "administrator@icloud.com", "9999");
+	//Add users to the system
+	library.addUser(&m1);
+	library.addUser(&l1);
+	library.addUser(&admin);
 
-	//add users to system
-	admin.addUser(library, &m1);
-	admin.addUser(library, &m2);
-	admin.addUser(library, &l1);
-	admin.addUser(library, &admin);
+	int roleChoice;
 
-	cout << "\n=== Admin Viewing Users ===\n";
-	admin.viewUsers(library);
-	
-	//Polymorphism, displaying the menus
-	User* users[4] = { &m1, &m2,  &l1, &admin };
-	cout << "\n=== Display User Menus ===\n";
-	for (int i = 0; i < 4; i++)
-		users[i]->showMenu();
+	cout << "===== Library System Login =====\n";
+	cout << "1. Member\n";
+	cout << "2. Librarian\n";
+	cout << "3. Administrator\n";
+	cout << "Select role (1, 2 or 3): ";
+	cin >> roleChoice;
 
-	//authenticate denisb user logging in
-	if (m1.authenticate("denisb@gmail.com", "4321")) {
-	m1.login(); 
+	if (roleChoice == 1) {
+
+		string email, password;
+		cout << "Enter Email: ";
+		cin >> email;
+
+		cout << "Enter Password: ";
+		cin >> password;
+
+		if (m1.authenticate(email, password)) {
+
+			m1.login();
+			int choice;
+
+			do {
+				m1.showMenu();
+
+				cout << "1 Search Book\n";
+				cout << "2 Borrow Book\n";
+				cout << "3 Return Book\n";
+				cout << "4 Reserve Book\n";
+				cout << "0 Logout\n";
+				cout << "Choice: ";
+				cin >> choice;
+
+				if (choice == 1) {
+					string query;
+					cout << "Enter title or author: ";
+					cin >> query;
+					library.searchBook(query);
+				}
+
+				else if (choice == 2) {
+					int bookId;
+					cout << "Enter Book ID: ";
+					cin >> bookId;
+					library.borrowBook(m1, bookId);
+				}
+
+				else if (choice == 3) {
+					int bookId;
+					cout << "Enter Book ID: ";
+					cin >> bookId;
+					library.returnBook(m1, bookId);
+				}
+
+				else if (choice == 4) {
+					int bookId;
+					cout << "Enter Book ID: ";
+					cin >> bookId;
+					library.reserveBook(m1, bookId);
+				}
+
+			} while (choice != 0);
+
+			m1.logout();
+		}
 	}
 
-	cout << "\n=== Test Borrowing Books ===\n";
-	library.borrowBook(m1, 1); // should succeed
-	library.borrowBook(m1, 2); // should succeed
-	library.borrowBook(m1,3); //should succeed
-	library.borrowBook(m1, 2); // already borrowed, should fail
-
-	cout << "\n=== Test Borrow Limit ===\n";
-	library.addBook(4,"Algorithms", "Robert Sedgewick");
-	library.addBook(5,"Python Basics", "Guido van Rossum");
-	library.addBook(6,"Java Fundamentals", "Herbert Schildt");
-	library.borrowBook(m1, 4);
-	library.borrowBook(m1, 5);
-	library.borrowBook(m1, 6); // should fail due to MAX_BORROW
-
-	cout << "\n=== Test Returning Books ===\n";
-	library.returnBook(m1, 2); //return book 2
-	library.returnBook(m1, 6); // now should succeed
-
-	cout << "\n=== Test Reservations ===\n";
-	library.borrowBook(m2,2); //m2 borrows book 2
-	library.reserveBook(m1, 2); //m1 reserves it
-	m1.incrementReservationDays(); // 1 day passing
-	m1.incrementReservationDays();
-	m1.incrementReservationDays(); // 3 days now passed
-	library.checkReservationExpiry(m1); // should expire reservation
-
-	cout << "\n=== Test Overdue Books ===\n";
-	//incrememnt days to cause overdue
-	for (int i = 0; i < 15; i++)
-		m1.incrementDays();
-	library.generateOverdueReport(m1);
-
-	cout << "\n=== Test Librarian Overdue Report ===\n";
-	l1.viewOverdueReport(library,m1); //librarian generates report
-
-	cout << "\n=== Test Admin Rules Change ===\n";
-	admin.setBorrowLimit(library, 7);
-	admin.setLatePenalty(library, 4.0);
-	admin.showRules(library);
-
-	return 0;
 }
