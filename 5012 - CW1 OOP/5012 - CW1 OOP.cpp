@@ -76,11 +76,11 @@ public:
 	string getName() const { return name; }
 
 	virtual void login() {
-		cout << "\n" + name << " logged in\n";
+		cout << "\n" + name << " logged in\n\n";
 	}
 
 	virtual void logout() {
-		cout << "\n" + name << " logged out\n";
+		cout << "\n" + name << " logged out\n\n";
 	}
 
 	virtual void showMenu() = 0; //Polymorphism
@@ -153,7 +153,7 @@ public:
 	}
 
 	void showMenu() override {
-		cout << "Member Menu: Search | Borrow | Return\n";
+		cout << "Member Menu: Search | Borrow | Return | Reserve | Logout\n";
 	}
 };
 
@@ -329,7 +329,7 @@ public:
 	}
 
 	void showMenu() override {
-		cout << "Librarian Menu: Add | Remove | View Reports\n";
+		cout << "Librarian Menu: Add | Remove | View Reports | Logout\n";
 	}
 
 	void addBook(LibrarySystem& system, int id, string title, string author) {
@@ -366,7 +366,7 @@ public:
 	}
 
 	void showMenu() override {
-		cout << "Administrator Menu: Manage Users | Set Rules\n";
+		cout << "Administrator Menu: Manage Users | Set Rules | Logout\n";
 	}
 
 	void addUser(LibrarySystem& system, User* user) {
@@ -392,9 +392,9 @@ int main() {
 	library.addBook(3, "Data Structures", "Mark Allen Weiss");
 
 	// Create the users
-	Member m1(101, "Denis B", "denisb@gmail.com", "4321");
-	Librarian l1(201, "Ian Visnevschi", "ianv@gmail.com", "1234");
-	Administrator admin(301, "Admin", "admin@gmail.com", "9999");
+	Member m1(101, "Denis B", "denisb", "4321");
+	Librarian l1(201, "Ian V", "ianv", "1234");
+	Administrator admin(301, "Admin", "admin", "9999");
 
 	//Add users to the system
 	library.addUser(&m1);
@@ -403,70 +403,175 @@ int main() {
 
 	int roleChoice;
 
-	cout << "===== Library System Login =====\n";
-	cout << "1. Member\n";
-	cout << "2. Librarian\n";
-	cout << "3. Administrator\n";
-	cout << "Select role (1, 2 or 3): ";
-	cin >> roleChoice;
+	do {
 
-	if (roleChoice == 1) {
+		cout << "\n===== Library System Login =====\n";
+		cout << "\n1. Member\n";
+		cout << "2. Librarian\n";
+		cout << "3. Administrator\n";
+		cout << "0. Exit System\n";
+		cout << "\nSelect role: ";	
+		cin >> roleChoice;
 
-		string email, password;
-		cout << "Enter Email: ";
-		cin >> email;
+		if (roleChoice == 1) {
 
-		cout << "Enter Password: ";
-		cin >> password;
+			string email, password;
+			cout << "Enter Email: ";
+			cin >> email;
 
-		if (m1.authenticate(email, password)) {
+			cout << "Enter Password: ";
+			cin >> password;
 
-			m1.login();
-			int choice;
+			if (m1.authenticate(email, password)) {
 
-			do {
-				m1.showMenu();
+				m1.login();
+				int choice;
 
-				cout << "1 Search Book\n";
-				cout << "2 Borrow Book\n";
-				cout << "3 Return Book\n";
-				cout << "4 Reserve Book\n";
-				cout << "0 Logout\n";
-				cout << "Choice: ";
-				cin >> choice;
+				do {
+					m1.showMenu();
 
-				if (choice == 1) {
-					string query;
-					cout << "Enter title or author: ";
-					cin >> query;
-					library.searchBook(query);
-				}
+					cout << "\n1 Search Book\n";
+					cout << "2 Borrow Book\n";
+					cout << "3 Return Book\n";
+					cout << "4 Reserve Book\n";
+					cout << "0 Logout\n";
+					cout << "\nChoice: ";
+					cin >> choice;
 
-				else if (choice == 2) {
-					int bookId;
-					cout << "Enter Book ID: ";
-					cin >> bookId;
-					library.borrowBook(m1, bookId);
-				}
+					if (choice == 1) {
+						string query;
+						cout << "Enter title or author: ";
+						cin >> query;
+						library.searchBook(query);
+					}
 
-				else if (choice == 3) {
-					int bookId;
-					cout << "Enter Book ID: ";
-					cin >> bookId;
-					library.returnBook(m1, bookId);
-				}
+					else if (choice == 2) {
+						int bookId;
+						cout << "Enter Book ID: ";
+						cin >> bookId;
+						library.borrowBook(m1, bookId);
+						for (int i = 0; i < 15; i++)
+							m1.incrementDays();
+					}
 
-				else if (choice == 4) {
-					int bookId;
-					cout << "Enter Book ID: ";
-					cin >> bookId;
-					library.reserveBook(m1, bookId);
-				}
+					else if (choice == 3) {
+						int bookId;
+						cout << "Enter Book ID: ";
+						cin >> bookId;
+						library.returnBook(m1, bookId);
+					}
 
-			} while (choice != 0);
+					else if (choice == 4) {
+						int bookId;
+						cout << "Enter Book ID: ";
+						cin >> bookId;
+						library.reserveBook(m1, bookId);
+						for (int i = 0; i < 15; i++)
+							m1.incrementReservationDays();
+					}
 
-			m1.logout();
+				} while (choice != 0);
+				m1.logout();
+			}
 		}
-	}
 
-}
+		else if (roleChoice == 2) {
+
+			string email, password;
+			cout << "Enter Email: ";
+			cin >> email;
+
+			cout << "Enter Password: ";
+			cin >> password;
+			if (l1.authenticate(email, password)) {
+
+				l1.login();
+				int choice;
+
+				do {
+					l1.showMenu();
+					cout << "\n1 Add Book\n";
+					cout << "2 Remove Book\n";
+					cout << "3 View Overdue Report\n";
+					cout << "0 Logout\n";
+					cout << "\nChoice: ";
+					cin >> choice;
+
+					if (choice == 1) {
+						int id;
+						string title, author;
+						cout << "Enter ID: ";
+						cin >> id;
+						cout << "Enter Title: ";
+						cin.ignore();
+						getline(cin, title);
+						cout << "Enter Author: ";
+						getline(cin, author);
+						l1.addBook(library, id, title, author);
+					}
+
+					else if (choice == 2) {
+						int id;
+						cout << "Enter Book ID: ";
+						cin >> id;
+						l1.removeBook(library, id);
+					}
+
+					else if (choice == 3) {
+						l1.viewOverdueReport(library, m1);
+					}
+
+				} while (choice != 0);
+				l1.logout();
+			}
+		}
+
+		else if (roleChoice == 3) {
+
+			string email, password;
+			cout << "Enter Email: ";
+			cin >> email;
+
+			cout << "Enter Password: ";
+			cin >> password;
+			if (admin.authenticate(email, password)) {
+
+				admin.login();
+				int choice;
+
+				do {
+					admin.showMenu();
+					cout << "\n1 Set Borrow Limit\n";
+					cout << "2 Set Late Penalty\n";
+					cout << "3 View Users\n";
+					cout << "0 Logout\n";
+					cout << "\nChoice: ";
+					cin >> choice;
+
+					if (choice == 1) {
+						int limit;
+						cout << "Enter new limit: ";
+						cin >> limit;
+						admin.setBorrowLimit(library, limit);
+					}
+
+					else if (choice == 2) {
+						double penalty;
+						cout << "Enter penalty: ";
+						cin >> penalty;
+						admin.setLatePenalty(library, penalty);
+					}
+
+					else if (choice == 3) {
+						admin.viewUsers(library);
+					}
+
+				} while (choice != 0);
+				admin.logout();
+			}
+		}
+	} while (roleChoice != 0);
+
+	cout << "\nSystem closed.\n";
+	return 0;
+	}
