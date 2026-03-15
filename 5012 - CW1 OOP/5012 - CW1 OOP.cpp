@@ -391,7 +391,7 @@ public:
 	}
 
 	void showMenu() override {
-		cout << "Administrator Menu: Set Borrow Limit | Set Late Penalty | View Users | Logout\n";
+		cout << "Administrator Menu: Set Borrow Limit | Set Late Penalty | View Users | Add User | Remove User | Logout\n";
 	}
 
 	void addUser(LibrarySystem& system, User* user) {
