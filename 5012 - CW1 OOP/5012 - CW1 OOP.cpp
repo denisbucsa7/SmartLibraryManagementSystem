@@ -40,7 +40,7 @@ public:
 	BookStatus getStatus() const { return status; }
 
 	//change the book status
-	void setStatus(BookStatus s) { status = s; }
+	void setStatus(BookStatus s) { status = s; } // encapsulation
 
 	// convert book status to readable text
 	string getStatusString() const {
@@ -59,7 +59,7 @@ public:
 	Notification(string msg) : message(msg) {}
 	// displays notification to user
 	void send() {
-		cout << "Notification: " << message << endl;
+		cout << "Notification: " << message << endl; // messaging system
 	}
 };
 
@@ -126,7 +126,7 @@ public:
 	void borrowBook(int bookId) {
 		borrowedBooks.push_back(bookId);
 		borrowedDays.push_back(0);
-		borrowedDates.push_back(time(0));
+		borrowedDates.push_back(time(0)); // stores current time in seconds
 	}
 	// remove returned book
 	void returnBook(int bookId) {
@@ -242,15 +242,19 @@ public:
 	}
 
 	void searchBook(const string& query) {
+		bool found = false;
 		for (auto& book : books) {
+		// case sensitive match for title or author
 			if (book.getTitle() == query || book.getAuthor() == query) {
-				cout << "Found: " << book.getTitle()
-					 << " by " << book.getAuthor()
-					 << " | Status: " << book.getStatusString() << endl;
-				return;
+				cout << "Book ID: " << book.getID()
+					<< " | Title: " << book.getTitle()
+					<< " | Author: " << book.getAuthor()
+					<< " | Status: " << book.getStatusString() << endl;
+				found = true;
 			}
 		}
-		cout << "Book not found\n";
+		if (!found)
+			cout << "Book not found\n";
 	}
 
 	void borrowBook(Member& member, int bookId) {
@@ -291,8 +295,12 @@ public:
 
 	void reserveBook(Member& member, int bookId) {
 		for (int i = 0; i < books.size(); i++) {
-			if (books[i].getID() == bookId &&
-				books[i].getStatus() == Borrowed) {
+			if (books[i].getID() == bookId) {
+
+				if (books[i].getStatus() == Reserved) {
+					cout << "Book is already reserved\n";
+					return;
+				}
 
 				books[i].setStatus(Reserved);
 				member.reserveBook(bookId);
@@ -417,9 +425,9 @@ int main() {
 	library.addBook(3, "Data Structures", "Mark Allen Weiss");
 
 	// Create the users
-	Member m1(101, "Denis B", "denisb", "4321");
-	Librarian l1(201, "Ian V", "ianv", "1234");
-	Administrator admin(301, "Admin", "admin", "9999");
+	Member m1(101, "Denis B", "denisb@email.com", "4321");
+	Librarian l1(201, "Ian V", "ianv@email.com", "1234");
+	Administrator admin(301, "Admin", "admin@email.com", "9999");
 
 	//Add users to the system
 	library.addUser(&m1);
@@ -466,7 +474,8 @@ int main() {
 					if (choice == 1) {
 						string query;
 						cout << "Enter title or author: ";
-						cin >> query;
+						cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear leftover input
+						getline(cin,query); // read whole line including spaces
 						library.searchBook(query);
 					}
 
