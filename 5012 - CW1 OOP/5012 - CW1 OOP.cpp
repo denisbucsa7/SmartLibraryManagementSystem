@@ -8,17 +8,19 @@
 
 using namespace std;
 
-const int MAX_BORROW = 5;
-const int LOAN_DAYS = 14;
-const int RESERVATION_DAYS = 3;
+//system rules and limits
+const int MAX_BORROW = 5;  // max books a member can borrow
+const int LOAN_DAYS = 14;   // number of days before a book becomes overdue
+const int RESERVATION_DAYS = 3;  // reservation expiry time
 
+//book status options
 enum BookStatus {
 	Available,
 	Borrowed,
 	Reserved
 };
 
-//Book Class below:
+//Book Class below which represents a book in the library:
 class Book {
 private:
 	int id;
@@ -27,17 +29,20 @@ private:
 	BookStatus status; // Available or Borrowed or Reserved
 
 public:
+	// constructor to create a new book
 	Book(int i, string t, string a)
 		: id(i), title(t), author(a), status(Available) {
 	}
-
+	// getter methods
 	int getID() const { return id; }
 	string getTitle() const { return title; }
 	string getAuthor() const {return author; }
 	BookStatus getStatus() const { return status; }
 
+	//change the book status
 	void setStatus(BookStatus s) { status = s; }
 
+	// convert book status to readable text
 	string getStatusString() const {
 		if (status == Available) return "Available";
 		if (status == Borrowed) return "Borrowed";
@@ -45,17 +50,20 @@ public:
 	}
 };
 
+// notification class below which handles system messages to users:
 class Notification {
 private:
 	string message;
 public:
+// constructor stores notification message
 	Notification(string msg) : message(msg) {}
+	// displays notification to user
 	void send() {
 		cout << "Notification: " << message << endl;
 	}
 };
 
-//User Class below:
+//User Class below which is the base class for all system users:
 class User {
 protected:
 	int id;
@@ -64,80 +72,96 @@ protected:
 	string password;
 
 public:
+// constructor to create user
 	User(int i, string n, string e, string p)
 		: id(i), name(n), email(e), password(p) {
 	}
 
+	// authenticate user credentials
 	bool authenticate(string inputEmail, string inputPassword) {
 		return (email == inputEmail && password == inputPassword);
 	}
 
+	// getter functions
 	int getId() const { return id; }
 	string getName() const { return name; }
 
+	// log in message
 	virtual void login() {
 		cout << "\n" + name << " logged in\n\n";
 	}
 
+	// log out message
 	virtual void logout() {
 		cout << "\n" + name << " logged out\n\n";
 	}
 
+	//virtual function for displaying role menu
 	virtual void showMenu() = 0; //Polymorphism
 
 	virtual ~User() {}
 };
 
-//Member Class below:
+//Member Class below which inherits from user and allows borrowing and reserving books:
 class Member : public User {
 private:
+// allows LibrarySystem to access private member data
 	friend class LibrarySystem;
 	
 	vector<int> borrowedBooks; // Tracks books borrowed
 	vector<int> borrowedDays; //Track days borrowed
-	vector<int> reservedBooks; 
-	vector<int> reservationDays;
-	vector<time_t> borrowedDates; 
+	vector<int> reservedBooks; // stores reserved books
+	vector<int> reservationDays; // tracks reservation duration
+	vector<time_t> borrowedDates; // stores date when book is borrowed
 
 public:
 	Member(int i, string n, string e, string p)
 		: User(i, n, e, p) {
 	}
-
+	// checks if member is allowed to borrow another book
 	bool canBorrow(int limit) {
 		return borrowedBooks.size() < limit;
 	}
-
+	// add book to borrowed list
 	void borrowBook(int bookId) {
 		borrowedBooks.push_back(bookId);
 		borrowedDays.push_back(0);
 		borrowedDates.push_back(time(0));
 	}
+	// remove returned book
 	void returnBook(int bookId) {
+		bool found = false;
 		for (int i = 0; i < borrowedBooks.size(); i++) {
 			if (borrowedBooks[i] == bookId) {
+
+				found = true;
 				borrowedBooks.erase(borrowedBooks.begin() + i);
 				borrowedDays.erase(borrowedDays.begin() + i);
 				borrowedDates.erase(borrowedDates.begin() + i);
 				break;
 			}
 		}
+		if (!found)
+			cout << "You did not borrow this book.\n";
 	}
+	// add reservation
 	void reserveBook(int bookId) {
 		reservedBooks.push_back(bookId);
 		reservationDays.push_back(0);
 	}
+	// simulate a day passing for borrowed books
 	void incrementDays() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			borrowedDays[i]++;
 		}
 	}
+	// simulate a day passing for reservations
 	void incrementReservationDays() {
 		for (int i = 0; i < reservationDays.size(); i++) {
 			reservationDays[i]++;
 		}
 	}
-	
+	// check is books are overdue and send notifications
 	void checkOverdue() {
 		for (int i = 0; i < borrowedDays.size(); i++) {
 			if (borrowedDays[i] > LOAN_DAYS - 1) {
@@ -151,27 +175,28 @@ public:
 			}
 		}
 	}
-
+	// display menu for member
 	void showMenu() override {
 		cout << "Member Menu: Search | Borrow | Return | Reserve | Logout\n";
 	}
 };
 
-//LIbrary system class below:
+//Library system class below which manages books, users and borrowing logic:
 class LibrarySystem {
 private:
-	vector<Book> books;
-	vector<User*> users;
-	int borrowLimit;
-	double latePenalty;
+	vector<Book> books; // stores all books
+	vector<User*> users; // stores all users
+
+	int borrowLimit; // max number of books a member can borrow
+	double latePenalty; // fine per overdue day
 
 public:
-
+// constructor sets deafult rules
 	LibrarySystem() {
 		borrowLimit = 5;
 		latePenalty = 2.0;
 	}
-
+	// admin functions to change system rules
 	void setBorrowLimit(int limit) {
 		borrowLimit = limit;
 	}
@@ -183,7 +208,7 @@ public:
 	void setLatePenalty(double penalty) {
 		latePenalty = penalty;
 	}
-
+	// add user to system
 	void addUser(User* user) {
 		users.push_back(user);
 	}
@@ -201,7 +226,7 @@ public:
 			cout << user->getName() << endl;
 		}
 	}
-	
+	// add new book
 	void addBook(int id, string title, string author) {
 		books.push_back(Book(id, title, author));
 	}
@@ -366,7 +391,7 @@ public:
 	}
 
 	void showMenu() override {
-		cout << "Administrator Menu: Manage Users | Set Rules | Logout\n";
+		cout << "Administrator Menu: Set Borrow Limit | Set Late Penalty | View Users | Logout\n";
 	}
 
 	void addUser(LibrarySystem& system, User* user) {
@@ -412,7 +437,7 @@ int main() {
 		cout << "0. Exit System\n";
 		cout << "\nSelect role: ";	
 		cin >> roleChoice;
-
+		// member
 		if (roleChoice == 1) {
 
 			string email, password;
@@ -452,6 +477,7 @@ int main() {
 						library.borrowBook(m1, bookId);
 						for (int i = 0; i < 15; i++)
 							m1.incrementDays();
+						m1.checkOverdue();
 					}
 
 					else if (choice == 3) {
@@ -468,13 +494,14 @@ int main() {
 						library.reserveBook(m1, bookId);
 						for (int i = 0; i < 15; i++)
 							m1.incrementReservationDays();
+							library.checkReservationExpiry(m1);
 					}
 
 				} while (choice != 0);
 				m1.logout();
 			}
 		}
-
+		// librarian
 		else if (roleChoice == 2) {
 
 			string email, password;
@@ -525,7 +552,7 @@ int main() {
 				l1.logout();
 			}
 		}
-
+		//admin
 		else if (roleChoice == 3) {
 
 			string email, password;
@@ -544,6 +571,8 @@ int main() {
 					cout << "\n1 Set Borrow Limit\n";
 					cout << "2 Set Late Penalty\n";
 					cout << "3 View Users\n";
+					cout << "4 Add User\n";
+					cout << "5 Remove User\n";
 					cout << "0 Logout\n";
 					cout << "\nChoice: ";
 					cin >> choice;
@@ -564,6 +593,55 @@ int main() {
 
 					else if (choice == 3) {
 						admin.viewUsers(library);
+					}
+
+					else if (choice == 4) {
+
+						int id;
+						string name, email, password;
+						int role;
+
+						cout << "Enter User ID: ";
+						cin >> id;
+
+						cout << "Enter Name: ";
+						cin.ignore();
+						getline(cin, name);
+
+						cout << "Enter Email: ";
+						getline(cin, email);
+
+						cout << "Enter Password: ";
+						getline(cin, password);
+
+						cout << "Select Role (1 = Member, 2 = Librarian): ";
+						cin >> role;
+
+						if (role == 1) {
+							Member* newMember = new Member(id, name, email, password);
+							admin.addUser(library, newMember);
+							cout << "Member added successfully.\n";
+						}
+
+						else if (role == 2) {
+							Librarian* newLibrarian = new Librarian(id, name, email, password);
+							admin.addUser(library, newLibrarian);
+							cout << "Librarian added successfully.\n";
+						}
+
+						else {
+							cout << "Invalid role.\n";
+						}
+					}
+
+					else if (choice == 5) {
+
+						int userId;
+						cout << "Enter User ID to remove: ";
+						cin >> userId;
+
+						admin.removeUser(library, userId);
+						cout << "User removed if ID existed.\n";
 					}
 
 				} while (choice != 0);
