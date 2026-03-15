@@ -484,9 +484,9 @@ int main() {
 						cout << "Enter Book ID: ";
 						cin >> bookId;
 						library.borrowBook(m1, bookId);
-						for (int i = 0; i < 15; i++)
+						for (int i = 0; i < 15; i++) // simulating 15 days passing
 							m1.incrementDays();
-						m1.checkOverdue();
+							m1.checkOverdue(); // notification for checking if book is overdue
 					}
 
 					else if (choice == 3) {
@@ -501,9 +501,9 @@ int main() {
 						cout << "Enter Book ID: ";
 						cin >> bookId;
 						library.reserveBook(m1, bookId);
-						for (int i = 0; i < 15; i++)
+						for (int i = 0; i < 15; i++) // simulating 15 days passing
 							m1.incrementReservationDays();
-							library.checkReservationExpiry(m1);
+							library.checkReservationExpiry(m1); // notification for checking if reservation is expired
 					}
 
 				} while (choice != 0);
